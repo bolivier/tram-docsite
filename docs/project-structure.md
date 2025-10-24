@@ -100,18 +100,18 @@ A typical repsonse might look like
  :locals {:user user}}
 ```
 
-Read more about routes in the [routing guide](/routing).
+Read more about routes in the [routing guide](routing).
 
 ## Views `src/sample_app/views`
 
 Views are typically a 1:1 mapping of handlers.  Via naming conventiosn you can
-read about in the  in the [routing guide](/routing), views are
+read about in the  in the [routing guide](routing), views are
 automatically looked up for corresponding handlers.
 
 In Tram, a view is simply a function that receives a single argument, the
 `locals` map from a handler, and returns a vector of hiccup (html).
 
-Read more about views in the [views guide](./views).
+Read more about views in the [views guide](views).
 
 ## Models `src/sample_app/models`
 
