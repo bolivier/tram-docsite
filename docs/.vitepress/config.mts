@@ -5,8 +5,6 @@ export default defineConfig({
   title: "TRAM",
   description: "A Clojure web framework",
 
-  base: '/tram-docsite',
-
   themeConfig: {
     // https://vitepress.dev/reference/default-theme-config
     logo: "./logo.png",
