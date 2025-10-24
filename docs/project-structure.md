@@ -100,18 +100,18 @@ A typical repsonse might look like
  :locals {:user user}}
 ```
 
-Read more about routes in the [routing guide](/routing-guides).
+Read more about routes in the [routing guide](/routing).
 
 ## Views `src/sample_app/views`
 
 Views are typically a 1:1 mapping of handlers.  Via naming conventiosn you can
-read about in the  in the [routing guide](/routing-guides), views are
+read about in the  in the [routing guide](/routing), views are
 automatically looked up for corresponding handlers.
 
 In Tram, a view is simply a function that receives a single argument, the
 `locals` map from a handler, and returns a vector of hiccup (html).
 
-Read more about views in the [views guide](./views-guide.md).
+Read more about views in the [views guide](./views).
 
 ## Models `src/sample_app/models`
 
@@ -129,20 +129,20 @@ after being retrieved from the database so you don't accidentally select it.
   (dissoc user :password))
 ```
 
-Read more about model files in the [model-guide](./model-guide.md).
+Read more about model files in the [model-guide](./models).
 
 ## Concerns `src/sample_app/concerns`
 
 Concerns are domain areas where most of your logic should live.  These can be
 split up in any way that makes sense for your application. 
 
-Read more about concerns in the [concern guide](./concern-guide.md).
+Read more about concerns in the [concern guide](./concerns).
 
 ## Components `src/sample_app/components`
 
 Components are reusable view functions that return hiccup (html).
 
-Read more in the [components guide](components-guide.md).
+Read more in the [components guide](components).
 
 ## Application system `src/sample_app/config.clj`
 
