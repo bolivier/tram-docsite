@@ -7,7 +7,7 @@ hero:
   text: "A Clojure web framework"
   tagline: Tool for Rapid Application Modeling
   image:
-    src: ./logo.png
+    src: /logo.png
     alt: Tram Logo
   actions:
     - theme: brand
