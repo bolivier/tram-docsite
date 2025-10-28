@@ -21,13 +21,21 @@ hero:
       link: /tutorial
 
 features:
-  - title: Batteries Included 
-    details: Routing, ORM, templating, and more 
-  
-  - title: Something Good
-    details: Some really nice property
-  
-  - title: Simple, but Easy
-    details: Clojure emphasizes simple programs, but Tram makes them easy to write 
----
+  - title: Simple and Easy
+    details: |
+        A curated set of best-in-class tools (Reitit, Integrant, Toucan2, 
+        HTMX, Migratus) wired up to work together.
 
+    
+  - title: Batteries Included, but Removable 
+    details: | 
+        Sensible defaults that don't lock you in; everything is just Clojure.
+        Tram’s defaults are strong opinions — not locked doors.
+    
+  
+  - title: Data, not Magic
+    details: | 
+        Routes, systems, and views are data structures, not opaque DSLs.
+        It's a programmable environment that embraces the REPL.
+   
+---
