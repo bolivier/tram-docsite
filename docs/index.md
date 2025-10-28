@@ -24,8 +24,8 @@ features:
   - title: Batteries Included 
     details: Routing, ORM, templating, and more 
   
-  - title: Familiar
-    details: Tram uses patterns familiar to anybody who has 
+  - title: Something Good
+    details: Some really nice property
   
   - title: Simple, but Easy
     details: Clojure emphasizes simple programs, but Tram makes them easy to write 
