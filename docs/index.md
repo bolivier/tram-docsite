@@ -23,19 +23,19 @@ hero:
 features:
   - title: Simple and Easy
     details: |
-        A curated set of best-in-class tools (Reitit, Integrant, Toucan2, 
+        A curated set of best-in-class tools (Reitit, Integrant, Toucan2,
         HTMX, Migratus) wired up to work together.
 
-    
-  - title: Batteries Included, but Removable 
-    details: | 
+
+  - title: Removable Batteries Included
+    details: |
         Sensible defaults that don't lock you in; everything is just Clojure.
-        Tram’s defaults are strong opinions — not locked doors.
-    
-  
-  - title: Data, not Magic
-    details: | 
-        Routes, systems, and views are data structures, not opaque DSLs.
+        Tram’s defaults are strong opinions loosely held.
+
+
+  - title: Plain Clojure Data
+    details: |
+        Routes, systems, and views use plain Clojure data structures.
         It's a programmable environment that embraces the REPL.
-   
+
 ---

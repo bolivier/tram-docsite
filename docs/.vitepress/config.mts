@@ -36,9 +36,7 @@ export default defineConfig({
           { text: "Database", link: "/database" },
 
           { text: "Runtimes", link: "/runtimes" },
-          { text: "CLI Generators", link: "/generators" },
-
-          { text: "Components", link: "/components" },
+          { text: "CLI Generators", link: "/generators" }
         ],
       },
     ],

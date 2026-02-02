@@ -31,88 +31,172 @@ Under the hood, Tram uses Toucan2 for hydration.  You can read more on
 their Github.
 :::
 
-## Usage
+## Belongs To
 
-### Belongs To
+Authors belong to books.  As an example consider these connections:
 
+```clojure
+(def author
+  {:id 2
+   :name "Kurt Vonnegut"})
 
-
-In these examples, there are 4 relevant tables (all abbreviated to only the
-relevant parts).
-
-An `accounts` table representing a paying account
-| column | value       |
-|--------|-------------|
-| id     | primary-key |
-
-A `users` table representing users of an account
-| column     | value                       |
-|------------|-----------------------------|
-| id         | primary-key                 |
-| account_id | foreign key to accounts(id) |
-
-A `settings` table for user settings
-| column | value       |
-|--------|-------------|
-| id     | primary-key |
-
-A join table for users and settings
-`settings_users`
-| column     | value                       |
-|------------|-----------------------------|
-| id         | primary-key                 |
-| setting-id | foreign key to settings(id) |
-| user-id    | foreign key to users(id)    |
-
-
-To enable hydration of settings, create a has-many association for settings on users.
-
-```clj
-(tram.associations/has-many! :models/users :models/settings)
+(def book
+  {:id 1
+   :title "Slaughterhouse Five"
+   :author-id 2})
 ```
 
-The join table is called, by
-convention, settings_users. Concat the two table names in alphabetical order.
+This relationship is so universal, that writing out the sql for every instance
+feels wasteful.  Tram makes this easy -- there is nothing to write.  In this
+example, it can be automatically determined that books have authors, and the ids
+are inferred so long as the tables use conventional names.
 
-The table can be specified with `:through`, although I don't recommend this.
+```clojure
+(db/hydrate book :author)  ;; Book should be a db record, not a map.
 
-```clj
-(tram.associations/has-many! :models/users :models/settings :through :settings-for-users)
+;; =>
+{:id 1
+ :title "Slaughterhouse Five"
+ :author-id 2
+ :author {:name "Kurt Vonnegut"
+          :id 2}}
 ```
 
-The table name should be a kebab-case keyword here.
+## Has One
 
-With that done, you can call hydrate settings. Note that the hydration keywords
-are not namespaced.
+A has-one relationship is the inverse of a belongs-to relationship.  In this
+example, a supplier has only one account.
 
-```clj
-(t2/hydrate <user-model-instance> :settings)
+```clojure
+(def supplier {:id 1
+               :name "Acme Industrial Supplier"})
+
+(def account {:id 14
+              :supplier-id 1
+              :account-number "123123123"})
+
+;; models/suppliers.clj
+(db/has-one! :models/suppliers :account)
+
+;; In your application
+
+(db/hydrate supplier :account)
+;; =>
+{:id 1
+ :name "Acme Industrial Supplier"
+ :account {:id 14
+           :supplier-id 1
+           :account-number "123123123"}}
+```
+ ## `has-many`/`belongs-to`
+
+I would also like to be able to hydrate books on authors.  That association is
+also easy.
+
+```clojure
+;; In models/authors.clj
+(db/has-many! :models/authors :books)
+
+;; In your application
+(db/hydrate author :books)
+;; =>
+{:id 2
+ :name "Kurt Vonnegut"
+ :boooks [{:id 1
+           :title "Slaughterhouse Five"
+           :author-id 2}
+          {:id 2
+           :title "Breakfast of Champions"
+           :author-id 2}]}
 ```
 
-### Belongs To
+::: tip
+ Fields are not altered during hydration. You can control selection with
+ `deftransforms` and `after-select`.
+ :::
 
-Enable hydration of user on account like this
+## `has-many`/`has-many`
+
+Sometimes there are many records on both sides of the relationship.
+
+Tram supports a many-to-many relationship via conventionally named join table
+without any modifications to the `has-many`/`belongs-to` association definition.
+
+For example
+
+
+| `assemblies` |             |
+|--------------|-------------|
+| id           | primary-key |
+| name         | string      |
+
+| `parts`       |             |
+|-------------|-------------|
+| id          | primary-key |
+| part_number | string      |
+
+
+| `assemblies_parts` |                               |
+|--------------------|-------------------------------|
+| id                 | primary-key                   |
+| assembly_id        | foreign key to assemblies(id) |
+| part_id            | foreign key to parts(id)      |
+
+
+::: info
+The convention for join tables is something like
+`(->> [table-1 table-2] sort (str/join "_"))`
+
+You can read the source for `tram.language/join-table` to get a full picture.
+:::
 
 ```clj
-(tram.associations/belongs-to! :models/accounts :models/users)
+;; in models/assembly.clj
+(tram.associations/has-many! :models/assemblies :parts)
+
+;; in models/part.clj
+(tram.associations/has-many! :models/parts :assemblies)
 ```
 
-You can hydrate an account model like this
+Since the join table uses the Tram conventional name, there is no configuration
+required.
 
-```clj
-(t2/hydrate <account-model-instance> :user)
+If, however, you want to use the join table as a model in its own right you'll
+need to do more.
+
+| `physicians` |             |
+|--------------|-------------|
+| id           | primary-key |
+| name         | string      |
+
+| `patients` |             |
+|------------|-------------|
+| id         | primary-key |
+| name       | string      |
+
+
+| `appointments`   |                               |
+|------------------|-------------------------------|
+| id               | primary-key                   |
+| physician_id     | foreign key to physicians(id) |
+| patient_id       | foreign key to patients(id)   |
+| appointment_time | datetime                      |
+
+In this situation, you'd want to use `:models/appointments` as a real model.
+Everything about that model works exactly the same as any other model (querying,
+etc.  The model also automatically has `belongs-to` associations for
+`:physician` and `:patient`).
+
+```clojure
+;; in models/physician.clj
+(db/has-many! :models/physicians :patients {:join-table :appointments})
+(db/has-many! :models/physicians :appointments)
+
+;; in models/patient.clj
+(db/has-many! :models/patients :physicians {:join-table :appointments})
+(db/has-many! :models/patients :appointments)
+
+;; In your application
+(db/hydrate patient :physicians)
+(db/hydrate physician :patients)
 ```
-
-
-Note this is singular because this is a 1-1 relationship.
-
-### Has One
-
-`has-one` associations are implicit and will work whenever a table has a foreign
-key.  In this instance you would write
-
-```clj
-(t2/hydrate <settings-model-instance> :user)
-```
-
-and you would have the user object

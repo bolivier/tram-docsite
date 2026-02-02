@@ -142,8 +142,6 @@ Read more about concerns in the [concern guide](./concerns).
 
 Components are reusable view functions that return hiccup (html).
 
-Read more in the [components guide](components).
-
 ## Application system `src/sample_app/config.clj`
 
 Tram uses Integrant to connect various stateful parts of your application.
