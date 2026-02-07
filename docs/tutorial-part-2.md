@@ -256,7 +256,7 @@ guarantees that it is present and has the right shape.
 Then we will use a (not yet written) function from our poll concern namespace to
 cast the vote. Functions that modify things or have side effects often end in
 `!` to signal that. If we return a value, then the write was successful. If `nil` comes back, we did not successfully
-cast the vote, adn we need to handle that case.
+cast the vote, and we need to handle that case.
 
 ```clojure
 (tr/redirect :route/poll-results

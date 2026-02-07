@@ -99,13 +99,13 @@ The way you interact with a Clojure app is atypical compared to other languages.
 Typically, you start a server, edit code, maybe there's a compile step, maybe it
 hot-reloads, maybe the server restarts, and you check the behavior.
 
-Instead, Clojure emphasizes REPL driven devlopment (read-eval-print-loop). You
+Instead, Clojure emphasizes REPL driven development (read-eval-print-loop). You
 start the language runtime, connect your editor to the runtime, and 
  build your application by evaluating forms.
 
 ## Pre Development Setup Steps
 
-When creating a new appliation, there are some setup steps. First you need to
+When creating a new application, there are some setup steps. First you need to
 start the Postgresql docker container and initialize the databases. These are
 done with the following commands.
 

@@ -44,7 +44,7 @@ reversible in the down-migration.
 | type       | type of migration.  Only supports :create-table right now.                   |
 | table      | table name to create                                                         |
 | timestamps | boolean indicating presence of default `created_at` and `updated_at` columns |
-| attributes | attributes of he table to create                                             |
+| attributes | attributes of the table to create                                            |
 
 
 ### Attribute keys

@@ -93,7 +93,7 @@ Typically, you'll interact with keys like these in a request:
 There are likely going to be a lot of big maps in the request map because
 injection is a key way of passing data around in Tram.
 
-A typical repsonse might look like 
+A typical response might look like 
 
 ```clojure
 {:status 200
@@ -104,7 +104,7 @@ Read more about routes in the [routing guide](routing).
 
 ## Views `src/sample_app/views`
 
-Views are typically a 1:1 mapping of handlers.  Via naming conventiosn you can
+Views are typically a 1:1 mapping of handlers.  Via naming conventions you can
 read about in the  in the [routing guide](routing), views are
 automatically looked up for corresponding handlers.
 

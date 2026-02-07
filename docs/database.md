@@ -38,5 +38,5 @@ Database configuration is controlled via the `tram.edn` file.  You have 3
 environments, and they all have their own database config, `:db`.
 
 You can configure these to match whatever values you need.  Values from the
-environemnt can be read with the reader macro `#env ENV_VAR`.  The
+environment can be read with the reader macro `#env ENV_VAR`.  The
 recommendation for setting those values is a `mise.toml` file.
