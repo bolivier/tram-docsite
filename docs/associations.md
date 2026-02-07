@@ -102,7 +102,7 @@ also easy.
 ;; =>
 {:id 2
  :name "Kurt Vonnegut"
- :boooks [{:id 1
+ :books [{:id 1
            :title "Slaughterhouse Five"
            :author-id 2}
           {:id 2

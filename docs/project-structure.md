@@ -156,12 +156,12 @@ won't need to touch this.
 Root to your application. This sets up the server, initializes the system
 configuration, and  boots up the application.
 
-## Database Configuration `src/sample_app/db.
+## Database Configuration `src/sample_app/db.clj`
 
 This is where you'll write any global configuration for your database.
 
 By default, the only thing this file does is set a default connection to your
-database based on env.f
+database based on environment variables.
 
 ## Root Routes and Router `src/sample_app/routes.clj`
 

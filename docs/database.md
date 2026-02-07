@@ -21,9 +21,9 @@ The starter template includes a dockerfile to let you run postgres locally with
 
 There is also a script `bin/db-init` that will initialize project databases.
 
-## Toucan 2
+## Toucan2
 
-The ORM tram uses is called [Toucan 2](https://github.com/camsaul/toucan2).
+The ORM tram uses is called [Toucan2](https://github.com/camsaul/toucan2).
 It's an amazing library, and Tram would not exist without it.  Most of the
 required functions are re-exported from the `tram.db` namespace.
 

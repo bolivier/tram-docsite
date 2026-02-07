@@ -1,7 +1,7 @@
 # Handlers
 
 Request handlers receive a map representing an http request, and return a map
-representing http request. This is the [Ring
+representing an http response. This is the [Ring
 protocol](https://github.com/ring-clojure/ring),
 which is common in Clojure apps.
 

@@ -387,7 +387,7 @@ Now you should be able to use the new models.
 
 ## Models
 
-Models in Tram are handled via the fantastic Toucan 2 library.
+Models in Tram are handled via the fantastic Toucan2 library.
 
 They are read straight from the database tables, and do not require definition
 files.

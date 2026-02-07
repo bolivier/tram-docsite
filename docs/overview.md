@@ -10,7 +10,7 @@ choose whatever suits you. It's good advice, but somebody new to Clojure will
 likely have a hard time doing that.
 
 Tram is a different approach. Tram is an opinionated collection of libraries and
-glue code make it easy to get started.  They are all optional (but encouraged).
+glue code to make it easy to get started.  They are all optional (but encouraged).
 
 If you're completely new to Clojure, you should probably do a few tutorials
 elsewhere and then come back here.
