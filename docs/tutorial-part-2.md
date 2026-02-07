@@ -6,8 +6,8 @@ We'll add them at once with placeholders, and then update the placeholders as we
 go.  I find that Clojure is good at helping you get the structure you want, then
 refining that structure via the repl.
 
-To start, let's update our polls routes with routes to view a question, and a
-route to view the results of a question.
+To start, let's update our polls routes with routes to view a poll, and a
+route to view the results of a poll.
 
 ```clojure
 (tr/defroutes routes
@@ -19,22 +19,21 @@ route to view the results of a question.
     ["/:poll-id"
      {:parameters {:path [:map [:poll-id :int]]}}
      [""
-      {:name :route/question-details
+      {:name :route/poll-details
        :get  poll-details}]
      ["/results"
       {:name :route/poll-results
        :get  results-page}]]]])
 ```
 
-Something new here is that `:parameters` key.  Tram encourages you not to mix
-validation and preparation of a handler with the handler code itself.
+Something new here is that `:parameters` key. Tram encourages you not to mix
+validation and preparation of a handler with the handler code itself. That key
+enables request validation. This ensures that it has a path
+parameter called `:poll-id`, that is an integer, and it'll parse that into an
+integer. `:poll-id` is available to all descendent routes. You can access it in
+the request at `[:parameters :path :poll-id]`.
 
-Here we are introducing a parameter `:poll-id` for all child routes.  That
-parameter shows up in the path, and can be found in your request at
-`[:parameters :path :poll-id]`.  That parameter is guaranteed to be an integer
-in your handler.  If you pass a non-integer, the route will error.
-
-We also need to define these 2 handler functions with some placeholder data.
+Add these 2 handler functions with some placeholder content.
 
 ```clojure
 (defn poll-details [req]
@@ -52,18 +51,29 @@ These routes are now available in your application.  They currently don't check
 that you're looking at a real poll or not, so you can use any integer in the
 path.
 
-## Redirect on missing question
+## Redirect on missing poll
 
-Let's fix that.
-
-To redirect when a user tries to visit a URL for an invalid question, we are
+ To redirect when a user tries to visit a URL for an invalid poll, we are
 going to use an **interceptor**.
 
 ::: tip Definition
 
-**Interceptors** are how Tram adds behavior to routes.  They are Clojure maps
-that have a `:name`, and optionally `:enter` and `:leave` functions that take a
-context map (with `:request` and `:response`) and return a modified context.
+**Interceptors** are how Tram adds behavior to routes.
+
+They are Clojure maps that have a `:name`, and optionally `:enter` and `:leave`
+functions that take a context map (with `:request` and `:response`) and return a
+modified context.
+
+For example
+
+ ```clojure
+ (def logging-interceptor
+   {:name ::logging-interceptor
+    :enter (fn [ctx]
+             (log/event! ::saw-request {:data (:request ctx)})
+             ctx)})
+```
+
 :::
 
 Add a new route, poll-not-found, and add the interceptor to the routes under the
@@ -75,34 +85,49 @@ path param.
    ["/"
     {:name :route/homepage
      :get  polls-index}]
-   ["/polls"
-    ["/not-found" ;; [!code ++]
-     {:name :route/poll-not-found ;; [!code ++]
-      :get  :views/poll-not-found-page}] ;; [!code ++]
+   ["/polls/not-found"
+    {:name :route/poll-not-found
+     :get  :view/poll-not-found-page}]
+   ["/poll"
     ["/:poll-id"
-     {:interceptors [get-poll-interceptor] ;;[!code ++]
+     {:interceptors [get-poll-interceptor]
       :parameters   {:path [:map [:poll-id :int]]}}
-     ...]]])
+     [""
+      {:name :route/poll-details
+       :get  poll-details}]
+     ["/results"
+      {:name :route/poll-results
+       :get  results-page}]]]])
 ```
 Notice that the not found page uses a keyword and not a handler function, or
-view function.  A keyword like `:views/<template>` can be used in place of a
+view function.  A keyword like `:view/<template>` can be used in place of a
 full handler when all you do in a handler is return a 200.  Tram will look it up
 in the corresponding views ns.
 
-`get-poll-interceptor` will read the poll from the database, and redirect to the
-not found page if it does not exist.
+Create that view like this
+
+```clojure
+(defn poll-not-found-page [_]
+  [:span "Could not find poll"])
+```
+
+Next we have to implement `get-poll-interceptor`. It will read the poll from the
+database, and redirect to the not found page if it does not exist.
 
 ```clojure
 (def get-poll-interceptor
   {:name  ::get-poll-interceptor
    :enter (fn [ctx]
-            (let [poll-id
-                  (get-in ctx [:request :parameters :path :poll-id])]
-              (if-let [poll
-                       (db/select-one :models/polls :id poll-id)]
+            (let [poll-id (get-in ctx [:request :parameters :path :poll-id])]
+              (if-let [poll (db/select-one :models/polls :id poll-id)]
                 (assoc-in ctx [:request :poll] poll)
-                (tr/early-response ctx (tr/full-redirect :route/poll-not-found)))))})
+                (tr/early-response ctx
+                                   (tr/full-redirect
+                                     :route/poll-not-found)))))})
 ```
+
+`get-poll-interceptor` uses `tr/early-response` to abandon the queue of
+interceptors after this one and early return.
 
 ::: info
 You want to use `tr/full-redirect` and not `tr/redirect` because it uses a 301
@@ -118,13 +143,6 @@ a not found page.
 To cast votes, we want to present the choices available, allow the user to
 select one, record their vote, then redirect to a results page.
 
-::: tip
-
-Try to add some choices using `db/insert!`.  That way you can see the choices on
-the page.
-
-:::
-
 First we need to template the poll page. We once again use hiccup and create a
 simple form.
 
@@ -132,24 +150,23 @@ simple form.
 (defn poll-details-page [{:keys [poll]
                           :as   locals}]
   [:<>
-   [:form.ml-4 {:hx-post (tr/make-route :route/vote
-                                        {:poll-id (:id poll)})}
-    [:fieldset.flex.flex-col.gap-4
-     [:legend [:h1.text-xl.font-bold (:text poll)]]
-     [:ul#errors]
-     (for [choice (:choices poll)
-           :let   [{:keys [id text]} choice
-                   html-id (format "choice-%s" (:id choice))]]
-       [:div.flex.gap-2.items-center
-        [:input {:type     :radio
-                 :required true
-                 :class    "radio"
-                 :name     :choice
-                 :id       html-id
-                 :value    id}]
-        [:label {:for html-id}
-         text]])]
-    [:button.btn.btn-primary.mt-4 "Vote"]]])
+   [:form.max-w-lg {:hx-post (tr/make-route
+                              :route/vote
+                              {:poll-id (:id poll)})}
+    [:fieldset
+     [:legend
+      [:h1.text-lg.font-medium.mb-2
+       (:text poll)]]
+     [:div#errors]
+     [:div.flex.flex-col.gap-2
+      (for [choice (:choices poll)
+            :let   [{:keys [id text]} choice]]
+        [:label.flex.gap-1.items-center
+         [:input.radio {:type  :radio
+                        :name  :choice
+                        :value id}]
+         text])]]
+    [:button.btn.btn-primary.mt-2 "Vote"]]])
 ```
 
 This template accepts the poll, which has choices, iterates over the choices as
@@ -187,12 +204,12 @@ interceptor from earlier).
 ```clojure
 (defn polls-detail-page [req]
   {:status 200
-   :locals {:question (db/hydrate (:question req) :choices)}})
+   :locals {:poll (db/hydrate (:poll req) :choices)}})
 ```
 
 Now we need to create the vote route so that we can save the vote.
 
-Add this route under the `:question-id` path
+Add this route under the `:poll-id` path
 
 ```clojure
 ["/vote"
@@ -224,24 +241,60 @@ Then add this handler
 
 Let's break this down.
 
+```clojure
+(let [selected-choice (get-in req [:parameters :body :choice])]
+```
+
 First we grab `:choice` from the request body (remember, `:parameters`)
 guarantees that it is present and has the right shape.
 
-Then we will use a function from our poll concern namespace (not yet written) to
+```clojure
+(if (some? (poll/cast-vote! poll
+                            selected-choice))
+```
+
+Then we will use a (not yet written) function from our poll concern namespace to
 cast the vote. Functions that modify things or have side effects often end in
-`!` to signal that. If we return a value, then the write was successful, and we
-can redirect to the results page. If nothing comes back, we did not successfully
-cast the vote, adn we need to return an error response. We send hiccup
-corresponding to our error `:ul` from earlier, and specify in our header that
-nothing is meant to be swapped in normally.
+`!` to signal that. If we return a value, then the write was successful. If `nil` comes back, we did not successfully
+cast the vote, adn we need to handle that case.
 
-If you had a lot of places that used the combo poll/choice, you could write an
-interceptor to handle bad behavior in a custom way.  Then you could use that and
-guarantee that the choice was already correct in the handler fn.  I skip that
-here since it's not used again right now.
+```clojure
+(tr/redirect :route/poll-results
+                   {:poll-id (:id poll)})
+```
 
-With these routes, we can now vote on polls.  Let's get a results page so we can
-see who voted for what.
+In the truthy expression, we redirect to the results page for the poll.
+
+```clojure
+{:status  500
+ :headers {"hx-reswap" "none"}
+ :body    [:ul {:id "errors"
+                :hx-swap-oob "true"}
+           [:li "Invalid choice"]]})))
+```
+
+In the false expression, we don't redirect, and instead send an oob fragment
+with some error content.  You could use a template here, but this is simple
+enough to inline.  The header tells htmx not to swap out the main content of the
+form.
+
+The final step is to write `cast-vote!`.  Create `/src/polls/concerns/poll.clj`
+with this content
+
+```clojure
+(ns polls.concerns.poll
+  (:require [tram.db :as db]))
+
+(defn cast-vote! [poll choice-id]
+  (let [choice
+        (db/select-one :models/choices :id choice-id :poll-id (:id poll))]
+    (when choice
+      (db/save! (update choice
+                        :votes
+                        inc)))))
+```
+
+You can now cast a vote in a poll. But you can't view the results yet.
 
 ## Results Page
 
@@ -266,10 +319,69 @@ We update the handler
 
 ```clojure
 (defn results-page [req]
-  (let [{:keys [question]} req]
+  (let [{:keys [poll]} req]
     {:status 200
-     :locals {:question (db/hydrate question :choices)}}))
+     :locals {:poll (db/hydrate poll :choices)}}))
 ```
 
 And we're done! You can see the results, and jump back to the poll to vote
-again. 
+again.
+
+## Some Styling
+
+Right now, these pages have similar behavior, but they don't look like a
+cohesive app.  Let's add some styling to make the app feel more real.
+
+Up first, we'll add a navbar to the top of all our pages.  Tram supports a
+`:layout` key in your router that you can use to add layouts to all descendent
+routes.
+
+Update the routes to use a layout.
+
+```clojure
+ (tr/defroutes routes
+   [""
+    {:layout :views/polls-layout} ;; [!code ++]
+    ["/"
+     {:name :route/homepage
+      :get  polls-index}]
+    ["/polls/not-found"
+     {:name :route/poll-not-found
+      :get  :view/poll-not-found-page}]
+    ["/poll"
+     ["/:poll-id"
+      {:interceptors [get-poll-interceptor]
+       :parameters   {:path [:map [:poll-id :int]]}}
+      [""
+       {:name :route/poll-details
+        :get  poll-details-page}]
+      ["/vote"
+       {:name :route/vote
+        :post {:handler    cast-vote
+               :parameters {:body [:map [:choice :int]]}}}]
+      ["/results"
+       {:name :route/poll-results
+        :get  results-page}]]]])
+```
+
+This will wrap all the content with the function
+`polls.views.poll_views/polls-layout`.
+
+Layout functions take one parameter, it is a list of the descendent elements.
+
+`polls-layout` will have a navbar, and some padding on a main element of the
+page.
+
+```clojure
+(defn polls-layout [children]
+  [:<>
+   [:div {:class "navbar bg-base-200 shadow-sm"}
+    [:a {:class "btn btn-ghost text-xl"
+         :href  :route/homepage}
+     "Polls App"]]
+   [:main.max-w-lg.pl-4.pt-4 children]])
+```
+
+The pages have a more consistent and useful layout now.
+
+That's the end of the tutorial for the basic features of Tram.

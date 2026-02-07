@@ -96,19 +96,18 @@ Think adding db associations, or defining pre-insert or post-select transforms.
 ## The REPL
 
 The way you interact with a Clojure app is atypical compared to other languages.
-Typicall, you start a server, edit code, maybe there's a compile step, maybe it
+Typically, you start a server, edit code, maybe there's a compile step, maybe it
 hot-reloads, maybe the server restarts, and you check the behavior.
 
-Instead, Clojure emphasizes a REPL, or read-eval-print-loop. You start the
-language runtime, connect your editor to the runtime, and then start and build
-your the application from there (we can evaluate code from `user.clj` to do
-things like "start").
+Instead, Clojure emphasizes REPL driven devlopment (read-eval-print-loop). You
+start the language runtime, connect your editor to the runtime, and 
+ build your application by evaluating forms.
 
-## Setting up the application
+## Pre Development Setup Steps
 
-For a new appliation, there are some setup steps.  First you need to start the
-Postgresql docker container and initialize the databases.  These are done with
-the following commands.
+When creating a new appliation, there are some setup steps. First you need to
+start the Postgresql docker container and initialize the databases. These are
+done with the following commands.
 
 ```sh
 docker-compose up -d
@@ -127,6 +126,23 @@ Creating databases 'polls_development' and 'polls_test'...
 You'll need to have environment variables `PG_USER` and `PG_PASSWORD` available.
 The default password for the development database is `tram` and the username
 should be your username.
+
+## UI setup
+
+This isn't a tutorial for design or CSS. Cd into `resources/tailwindcss` and
+install [daisyui](https://daisyui.com/?lang=en).
+
+```sh
+npm i -D daisyui
+```
+
+and update `index.css` with 
+
+```css
+@import "tailwindcss" source("../../src");
+@config "./tailwind.config.js";
+@plugin "daisyui"; [!code ++]
+```
 
 ## Running the app
 
@@ -209,18 +225,13 @@ This file should look like
 
 Let's break this down real quick.
 
-This creates our namespace, and requires the namespace `tram.routes` as a
-dependency and aliases the full namespace to the shorter name `tr`.
-
 ```clojure
 (ns polls.handlers.poll-handlers
   (:require [tram.routes :as tr]))
 ```
 
-This defines our first handler.  Handlers are functions that take an http
-request and return an http response; both requests and responses are modeled
-internally as Clojure maps.  You can see that the response returned from this
-handler has a status of 200, and a body with our hello world string.
+This creates our namespace, and requires the namespace `tram.routes` as a
+dependency and aliases the full namespace to the shorter name `tr`.
 
 ```clojure
 (defn polls-index [req]
@@ -228,11 +239,10 @@ handler has a status of 200, and a body with our hello world string.
    :body   "Hello, world. You're at the polls index."})
 ```
 
-Then we create our routes.  There is only one route, the root, and it has the
-name `:route/homepage`, and a `GET` request issues to this route will use the
-`polls-index` handler.  `tr/defroutes` is a macro from `tram.routes` that adds
-additional data to the routes to enable some magic later.
-
+This defines our first handler. Handlers are functions that take an http request
+and return an http response; both requests and responses are modeled as Clojure
+maps. You can see that this handler's response has a status of 200, and a body
+with a hello world string.
 
 ```clojure
 (tr/defroutes routes
@@ -241,23 +251,25 @@ additional data to the routes to enable some magic later.
     :get  polls-index}])
 ```
 
+This creates the routes vector. There is only one route, the root, and it has
+the name `:route/homepage`, and a `GET` request issued to this route will use
+the `polls-index` handler. `tr/defroutes` is a macro from `tram.routes` that
+adds additional data to the routes to enable some magic later.
+
  If you run your application now, the routes will 404. That's because these
- routes are not mounted anywhere. The `routes` var here needs to be added to our
- root routes so that it can be accessed by the system. We mount these routes
- in `src/polls/routes.clj`
+ routes are not mounted anywhere. The `routes` vector needs to be added to our
+ root routes so that it can be accessed by the system. This is done in
+ `src/polls/routes.clj`
 
-This file defines your routes.  The routes themselves are stored in a vector,
-which is used with a router object.  The router has additional behavior like
-interceptors and data coercion, which we'll talk bout later.
+`routes.clj` defines all your application's routes. The routes themselves are
+stored in a vector, which is passed to a router object. The router has
+additional behavior like interceptors and data coercion, which we'll talk bout
+later.
 
-For now, update the routes file to require the handlers and add the handlers to the
-system routes.  Your system is assembled using a library called **integrant**,
-which assembles pieces together.  The initial relationships are defined
-already, and these multimethods initialize some part using the namespaced
-keyword (here: `::sys/routes`).
+For now, update the existing application routes to use the new polls routes.
 
 ```clojure
-  (:require [integrant.core :as ig]
+  (:require [integrant.core :as ig] 
             ...
             [polls.handlers.poll-handlers :as poll.handlers];;[!code focus] [!code ++]
             ...
@@ -291,6 +303,7 @@ Hello, world. You're at the polls index.
 
 ::: tip
 Restart your application by evaluating this code from `user.clj`
+
 `(ir/reset)`
 :::
 
@@ -299,6 +312,11 @@ Restart your application by evaluating this code from `user.clj`
 We need to create database models so we can show our list of polls on the index
 page.
 
+Our data model will have polls and choices. 
+
+![database schema](./public/polls-and-choices.svg)
+
+
 To create a migration, run the following from the CLI
 
 ```sh
@@ -306,10 +324,10 @@ tram generate migration 'create-polls-and-choices'
 ```
 
 You might be tempted to head straight to `/resources/migrations` and start
-editing the sql file there, but Tram has a little shortcut.
+editing the SQL file there, but Tram has a little shortcut.
 
 Tram supports **developer runtimes**.  These are transient files, not checked
-into version control, that let you create the skeleton for your sql files faster
+into version control, that let you create the skeleton for your SQL files faster
 than writing them by hand.  They do not replace sql, and they do not do anything
 other than generate the SQL file.  SQL is primary, and this is just a helper,
 you can easily write all the SQL to generate tables from scratch.
@@ -327,9 +345,7 @@ Remove the actions, and replace them with this vector
   :table      "polls"
   :timestamps true
   :attributes [{:name :text
-                :type :text}
-               {:name :published-date
-                :type :timestamp}]}
+                :type :text}]}
  {:type       :create-table
   :table      "choices"
   :timestamps true
@@ -338,7 +354,7 @@ Remove the actions, and replace them with this vector
                {:name    :votes
                 :type    :integer
                 :default 0}
-               {:name :question-id
+               {:name :poll-id
                 :type :reference}]}]
 ```
 
@@ -358,8 +374,14 @@ will overwrite them if you run `write-to-migration-files` again).  SQL is the
 primary way to control your database behavior.  It's all your database
 understands.
 
-Run this migration either with `tram.db/migrate` or from the CLI with `tram
-db:migrate`.
+Before you can run the migrations, you need to run the `init.sql` file that sets
+up Postgres extensions and initializes some content.
+
+Evaluate `(db/init-migrations)` in the `migrations.clj` file to initialize your
+sql migrations.
+
+After that, run the new migration either from `migrations.clj` with
+`tram.db/migrate` or from the CLI with `tram db:migrate`.
 
 Now you should be able to use the new models.
 
@@ -386,7 +408,14 @@ the `do` block.
     (db/insert! :models/polls {:text "What is your Quest?"})
     (db/insert! :models/polls {:text "What is your favorite color?"})
     (db/insert! :models/polls {:text "What is the airspeed velocity of an unladen swallow?"})
-    (def polls (db/select :models/polls)))
+    (def polls (db/select :models/polls))
+    (let [{:keys [id]} (db/select-one :models/polls
+                                      :text
+                                      "What is your favorite color?")]
+      (doseq [text ["red" "green" "blue"]]
+        (db/insert! :models/choices
+                    {:poll-id id
+                     :text    text}))))
   nil)
 ```
 
@@ -395,34 +424,39 @@ Now you have 3 polls stored in the database, and they are stored in a var
 
 ## Templates
 
-Replace your `:body` with hiccup that iterates over the polls
+Require the `tram.db` namespace in your handlers file and replace `:body` with
+hiccup that iterates over the polls
 
 ```clojure
 (defn polls-index [req]
   {:status 200
    :body   "Hello, world. You're at the polls index." ;; [!code --]
    :body [:ul ;; [!code ++]
-          (for [question questions] ;; [!code ++]
-            [:li [:a {:href "#"} (:text question)]])] ;; [!code ++]
+          (for [poll (db/select :models/polls)] ;; [!code ++]
+            [:li [:a {:href "#"} (:text poll)]])]}) ;; [!code ++]
 ```
 
-The text for the questions should be visible on the index page now.
+The text for the polls should be visible on the index page now.
 
 This isn't very good though. We don't want to mix up our view and handler
 concerns like this. We can move the hiccup to a view file and have it in a
-**template**. A **template** is a function that takes a `locals` map and returns
-hiccup.
+**template**. 
 
-Open `/src/polls/views/poll_views.clj` and create our `polls-index` function to
+::: tip Definition 
+A **template** is a function that takes a map of `locals` and returns hiccup
+representing html
+:::
+
+Create `/src/polls/views/poll_views.clj` and add a `polls-index` function to
 correspond to the handler (it is vital to use the _same function name_.)
 
 ```clojure
 ;; /src/polls/views/poll_views.clj
 (defn polls-index [locals]
   [:ul
-   (for [question (:questions locals)]
+   (for [poll (:polls locals)]
      [:li
-      [:a {:href "#"} (:text question)]])])
+      [:a {:href "#"} (:text poll)]])])
 ```
 
 To pass the locals, simply add them to the response map. Replace the `:body` key
@@ -432,9 +466,9 @@ template with the key `:template`.
 
 ```clojure
 (defn polls-index [req]
-  (let [questions (db/select :models/question)]
+  (let [polls (db/select :models/polls)]
     {:status 200
-     :locals {:questions questions}}))
+     :locals {:polls polls}}))
 ```
 
 Continued in [Part 2](/tutorial-part-2).
