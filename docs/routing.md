@@ -38,7 +38,7 @@ This means a **handler** is a valid **handler entry**.
  :get homepage-handler}
 ;; is equivalent to
 {:name :route/my-home
- :get  {:handler homepage-handler}
+ :get  {:handler homepage-handler}}
 ```
 
 # Routes

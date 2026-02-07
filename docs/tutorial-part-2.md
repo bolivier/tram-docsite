@@ -20,7 +20,7 @@ route to view the results of a poll.
      {:parameters {:path [:map [:poll-id :int]]}}
      [""
       {:name :route/poll-details
-       :get  poll-details}]
+       :get  poll-details-page}]
      ["/results"
       {:name :route/poll-results
        :get  results-page}]]]])
@@ -36,7 +36,7 @@ the request at `[:parameters :path :poll-id]`.
 Add these 2 handler functions with some placeholder content.
 
 ```clojure
-(defn poll-details [req]
+(defn poll-details-page [req]
   {:status 200
    :body   (format "You're looking at poll %s"
                    (get-in req [:parameters :path :poll-id]))})
@@ -94,7 +94,7 @@ path param.
       :parameters   {:path [:map [:poll-id :int]]}}
      [""
       {:name :route/poll-details
-       :get  poll-details}]
+       :get  poll-details-page}]
      ["/results"
       {:name :route/poll-results
        :get  results-page}]]]])
@@ -172,7 +172,7 @@ simple form.
 This template accepts the poll, which has choices, iterates over the choices as
 radio buttons, and will post that form to the route for casting votes.
 
-Something to notice is the empty `[:ul#errors]`.  That is where we'll inject
+Something to notice is the empty `[:div#errors]`.  That is where we'll inject
 errors with htmx's out-of-band swaps if something goes wrong.
 
 We need to update our hander so that the poll has choices in it.  You could do
@@ -310,7 +310,7 @@ This is very much the same as our previous task.  We create a template
     (for [choice (:choices poll)
           :let   [{:keys [text votes]} choice]]
       [:tr [:td text] [:td votes]])]
-   [:a.mt-4.btn.btn-primary {:href (tr/make-route :route/vote
+   [:a.mt-4.btn.btn-primary {:href (tr/make-route :route/poll-details
                                                   {:poll-id (:id poll)})}
     "Vote again?"]])
 ```

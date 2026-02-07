@@ -50,7 +50,7 @@ use these, run the migrations.
 
 Connect to the REPL from your editor and visit the file `/dev/migrations.clj`.
 
-Evaluate  `(db/migrate)` to run the migrations.  You may need to evaluate `(db/init)`
+Evaluate  `(db/migrate)` to run the migrations.  You may need to evaluate `(db/init-migrations)`
 first.  You can also create migrations here, and rollback migrations you don't
 need.
 

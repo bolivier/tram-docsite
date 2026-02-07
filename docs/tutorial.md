@@ -252,7 +252,7 @@ with a hello world string.
 ```
 
 This creates the routes vector. There is only one route, the root, and it has
-the name `:route/homepage`, and a `GET` request issued to this route will use
+the name `:route/polls-index`, and a `GET` request issued to this route will use
 the `polls-index` handler. `tr/defroutes` is a macro from `tram.routes` that
 adds additional data to the routes to enable some magic later.
 
