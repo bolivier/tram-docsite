@@ -1,42 +1,109 @@
 # Overview
 
-Tram is a web application framework designed to help developers who are new to
-Clojure start building web applications without being overwhelmed.
+Tram is a Clojure web application framework.  Tram takes advantage of the unique
+abilities provided by Clojure to make you more productive when creating apps for
+the web.
+
+Tram was initially created because getting started building Clojure web
+applications can easily overwhelm even an experienced Clojure developer.
+Typically, the community advises you to evaluate all the available libraries for
+a problem before choosing one.  But sometimes you have to get work done.
+You don't always want to evaluate different http servers when they all basically
+work.  You just need something to get started that you can swap out later if
+necessray.  Tram gives you a collection of libraries collected into our
+compressed namespaces so you don't have to worry about that when you want to
+start a project.
+
+Tram provides a set of defaults, but nothing in Tram is required.  Opt out of
+anything you don't want to use and replace it with your preferred tool.  Don't
+like our http server?  Use a different one.  Prefer a different clientside
+solution?  Use it.  Nothing is permanent, but everything was chosen to work
+together well.
 
 ## Clojure
 
-Typical Clojure advice is to evaluate the collection of available libraries and
-choose whatever suits you. It's good advice, but somebody new to Clojure will
-likely have a hard time doing that.
+If you're new to Clojure, we recommend doing some basic problem solving before
+starting a Tram application.  There are lots of good options for ways to explore
+the ecosystem in a simpler way before trying to build a full application.
 
-Tram is a different approach. Tram is an opinionated collection of libraries and
-glue code to make it easy to get started.  They are all optional (but encouraged).
+[Advent of Code](https://adventofcode.com/) is a set of puzzles really well
+suited to getting comfortable with REPL-driven-development.
 
-If you're completely new to Clojure, you should probably do a few tutorials
-elsewhere and then come back here.
 
-If you're feeling motivated, there is a small Clojure tutorial here.
+## Tram Architecture
 
-## MVC
+Tram should be familiar to developers who have used other MVC frameworks like
+Rails, Phoenix, or Laravel; and easy to pick up if you have used Next.js,
+Express, or Flask.
 
-Tram should be familiar to developers who have used Rails, Phoenix, Next.js, or
-other frameworks.
+### Models
 
-Tram uses
+Tram's models use [Toucan2](https://github.com/camsaul/toucan2) as an ORM.  It's
+more lightweight and SQL forward than most ORMs.
 
-- Postgres
-- htmx
-- automatically connected views and handlers
-- data defined routes
-- interceptors
-- hiccup templates
+One key distinction is that models are read straight from your database, so
+there is no model file to keep in sync.
 
-Tram is compatible with anything on the web. You can build a JSON api with any
-frontend technology you like.
+Our models support:
 
-You can swap out the database for SQLite or MySQL or Datomic. 
+- declarative querying
+- querying, updating, and saving without writing SQL
+- extensible hydration for nested data
 
-You can render your html with something entirely different.  
+### Handlers
 
-The default tools will work well together out of the box, but anything is open
-to modification.
+Handlers are how Tram models an http endpoint.  Handlers are functions that
+accept a single parameter, a map representing the http request, and they return
+a map representing the http response.
+
+### Views/Templates
+
+Tram uses hiccup (via [huff](https://github.com/escherize/huff)) to represent
+html in a compact syntax.
+
+```html
+<div class="container" id="submit-button-container">
+  <button class="btn p-4">
+    Submit
+  </button>
+</div>
+```
+
+becomes
+
+```clojure
+[:div#submit-button-container.container
+ [:button.btn.p-4
+  "Submit"]]
+```
+
+### Concerns
+
+Tram recommends grouping your business logic in "concerns".  A concern can be
+anything from a domain (like "authentication") or a model (like "user").
+
+These are simply namespace containers to group related behaviors.
+
+### Interceptors
+
+Tram uses Interceptors in place of middleware.  Interceptors make defining
+behavior _after_ your request is complete a little easier.
+
+Interceptors are Clojure maps with a `:name`, `:enter` fn run before the
+request, and a `:leave` fn run after the request.  They accept and return a
+**context map** which flows through all the `:enter` functions, then your
+handler runs, then the context map flows through all the `:leave` functions.
+
+<img style="margin: auto" src="./public/interceptor-stack-queue.svg"/>
+
+## Tools
+
+By default Tram comes ready to use Postgresql in a Docker container for your
+database, but any database with a JDBC driver is supported.
+
+By default Tram uses HTMX for swapping html partials.
+
+## JSON api
+
+Tram supports JSON apis out of the box.  Simply use the correct headers to
+request JSON, and return a clojure map in the `:body` of your response.
