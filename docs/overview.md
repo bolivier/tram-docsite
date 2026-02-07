@@ -29,6 +29,13 @@ the ecosystem in a simpler way before trying to build a full application.
 [Advent of Code](https://adventofcode.com/) is a set of puzzles really well
 suited to getting comfortable with REPL-driven-development.
 
+[X in Y Minutes](https://learnxinyminutes.com/clojure/) has a page to give your
+a whirlwind tour of the language.
+
+[Clojure for the Brave and True
+](https://www.braveclojure.com/clojure-for-the-brave-and-true/) is a fun book
+many people have enjoyed learning Clojure from.
+
 
 ## Tram Architecture
 

@@ -25,5 +25,5 @@ Clone the Tram repo.
 git clone https://github.com/bolivier/tram.git
 ```
 
-From that repo, copy the script `tram`, at the root of the repo, to your PATH.
+From that repo, put the script `tram`, at the root of the repo, on your PATH.
 

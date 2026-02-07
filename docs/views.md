@@ -26,7 +26,8 @@ For dynamic behavior, the recommended approach is to use htmx with endpoints
 that return the new html you need.  When that is insufficient, you are free to
 use any clientside library you like.
 
-I like using hyperscript, and I've heard positive things about [Alpine.js](https://alpinejs.dev/) and
-[Datastar](https://data-star.dev/).  There is nothing in Tram to prevent you
-from using those things.  You can require them from a CDN in the definition
-of your full html page, and they'll work independently.
+We like [hyperscript](https://hyperscript.org/), and heard good things about
+[Alpine.js](https://alpinejs.dev/) and [Datastar](https://data-star.dev/). There
+is nothing specific in Tram to any particular client library. You can require
+them from a CDN in the definition of your full html page, and they'll work
+independently.

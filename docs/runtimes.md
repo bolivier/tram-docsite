@@ -79,17 +79,21 @@ shorthand, because the namespace can be set up automatically for you.
 
 ### Usage
 
-By default, the migration blueprint looks something like this
+A migration blueprint looks something like this
 
 ```clojure
 (def blueprint
-  {:migration-name "my-fancy-migration"
+  {:migration-name "my-migration"
    :timestamp      "20251015180142"
    :actions        [{:type       :create-table
-                     :table      "my-table-name"
+                     :table      "users"
                      :timestamps true
-                     :attributes [{:name :id
-                                   :type :primary-key}]}]})
+                     :attributes [{:name    :username
+                                   :unique? true
+                                   :type    :text}
+                                   {:name     :name
+                                   :type      :text
+                                   :required? false}]}]})
 ```
 
 This blueprint can be written to the migration file by executing a line of code
@@ -105,15 +109,9 @@ in a comment sexp at the bottom of the file.
 Evaluate that function and the migration is written to the appropriate file it
 specifies.
 
-NOTE: Migrations are not checked for errors on write. Invalid migrations will
+::: tip Note
+
+Migrations are not checked for errors on write. Invalid migrations will
 fail when you evaluate `tram.migrations/migrate`.
 
-These are the default attributes that all tables have.  Let's look more closely
-at a few of them.
-
-### Primary Key
-
-```clojure
-{:name :id
- :type :primary-key}
-```
+:::
